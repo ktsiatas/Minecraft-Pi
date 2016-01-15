@@ -1,0 +1,71 @@
+## Kat Tsiatas
+## This game hides a diamond ore block within 30 of the player's location.
+## Your goal is to find that diamond. It will give you hot and colder hints.
+## Once you find it, it will tell you how long it took you to find it.
+## Don't forget to look up or down!
+
+import mcpi.minecraft as minecraft
+import mcpi.block as block
+import time
+import random
+import math
+import pygame
+
+# makes round numbers
+def roundVec3(vec3):
+    return minecraft.Vec3(int(vec3.x), int(vec3.y), int(vec3.z))
+
+def distanceBetweenPoints(point1,point2):
+    xd = point2.x - point1.x
+    yd = point2.y - point1.y
+    zd = point2.z - point1.z
+    return math.sqrt((xd*xd) + (yd*yd) + (zd*zd))
+
+if __name__ == "__main__":
+    #connects
+    mc = minecraft.Minecraft.create()
+    
+    mc.postToChat("Hi, Minecraft Hide & Seek")
+    time.sleep(2)
+    playerPos = mc.player.getPos()
+    randomBlockPos = roundVec3(playerPos)
+
+    ## just some music that I added but you probably don't have the file
+    # music
+    # pygame.init()
+    # pygame.mixer.music.load('tetrisb.mid')
+    # pygame.mixer.music.play(-1,0.0)
+
+    
+    # spawns a diamond within 30 of player
+    randomBlockPos.x = random.randint(randomBlockPos.x-30, randomBlockPos.x+30)
+    randomBlockPos.y = random.randint(randomBlockPos.y-30, randomBlockPos.y+30)
+    randomBlockPos.z = random.randint(randomBlockPos.z-30, randomBlockPos.z+30)
+    mc.setBlock(randomBlockPos.x,randomBlockPos.y,randomBlockPos.z, 56)
+    mc.postToChat("A diamond has been hidden - go find!")
+
+    playerPos = mc.player.getPos()
+    seeking = True
+    lastPlayerPos= playerPos
+    lastDistanceFromBlock = distanceBetweenPoints(randomBlockPos, lastPlayerPos)
+    timeStarted = time.time()
+    # do while looking
+    while (seeking == True):
+        playerPos = mc.player.getPos()
+        # checks if you moved
+        if lastPlayerPos != playerPos:
+            distanceFromBlock = distanceBetweenPoints(randomBlockPos, playerPos)
+            # tells you the time it took you to find it
+            if distanceFromBlock < 2:
+                seeking = False
+                timeTaken= time.time() - timeStarted
+                mc.postToChat("Completed in " + str(int(timeTaken)) + " seconds")
+            # tells you warmer or colder and updates last player location    
+            else:
+                if distanceFromBlock < lastDistanceFromBlock:
+                    mc.postToChat("Warmer" + str(int(distanceFromBlock)) + " blocks away")
+                if distanceFromBlock > lastDistanceFromBlock:
+                    mc.postToChat("Colder" + str(int(distanceFromBlock)) + "blocks away")
+                lastDistanceFromBlock = distanceFromBlock
+            time.sleep(2)
+        
